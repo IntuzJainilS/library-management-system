@@ -1,0 +1,30 @@
+// import dotenv from "dotenv";
+
+// dotenv.config();
+
+export default {
+  "development": {
+    "username": "root",
+    "password": "Root@123456" ,
+    "database": "lms",
+    "host": "127.0.0.1",
+    "dialect": "mysql",
+    "seederStorage": "sequelize",
+    "seederStoragePath": "sequelizeData.json",
+    "seederStorageTableName": "Sequelize_seeder_Data"
+  },
+  "test": {
+    "username": "root",
+    "password": null,
+    "database": "database_test",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": null,
+    "database": "database_production",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  }
+}
