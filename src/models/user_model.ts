@@ -1,10 +1,10 @@
 import { DataTypes, Model } from "sequelize";
-import { userattributes } from "../interface/user_interface";
+import { userattributes, UserCreationAttributes } from "../interface/user_interface";
 import { sequelize } from "../config/db";
 import { Books } from "./book_model";
 import { issuedBooks } from "./issuedBooks_model";
 
-export const user = sequelize.define<Model<userattributes>>("user", {
+export const user = sequelize.define<Model<userattributes, UserCreationAttributes>>("user", {
     user_id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
@@ -60,11 +60,22 @@ export const user = sequelize.define<Model<userattributes>>("user", {
 
 // associations
 Books.belongsToMany(user, {
-    through: issuedBooks
+    through: issuedBooks,
+    foreignKey:'book_id',
+    as:'users'
 });
 
 user.belongsToMany(Books, {
     through: issuedBooks,
+    foreignKey: 'user_id',
+    as:'books'
+});
+
+issuedBooks.belongsTo(Books, { 
+    foreignKey: 'book_id' 
+});
+issuedBooks.belongsTo(user, { 
+    foreignKey: 'user_id' 
 });
 
 // Books.hasMany(user,{

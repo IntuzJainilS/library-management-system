@@ -26,6 +26,12 @@ export const issuedBooks = sequelize.define<Model<issuedbooks>>("issued_books", 
         onUpdate: "CASCADE",
         onDelete: "SET NULL",
     },
+    issued_date: {
+        type: DataTypes.DATE
+    },
+    return_date: {
+        type: DataTypes.DATE
+    },
     deleted_at: {
         type: DataTypes.DATE,
         allowNull: true,
@@ -33,7 +39,7 @@ export const issuedBooks = sequelize.define<Model<issuedbooks>>("issued_books", 
 },
     {
         tableName: "issued_books",
-        timestamps: true,
+        timestamps: false,
         paranoid: true,
         deletedAt: "deleted_at",
     }

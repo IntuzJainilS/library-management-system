@@ -1,6 +1,15 @@
 import { Request, Response } from "express";
 import { user } from "../models/user_model";
+import bcrypt from "bcryptjs"
+import jwt from "jsonwebtoken";
+// import { Sequelize } from "sequelize";
+import { Op } from "sequelize";
+import dotenv from "dotenv";
+import { searchuserTypes } from "../interface/user_interface";
 
+dotenv.config();
+
+// register controller
 export const userRegister = async (req: Request, res: Response) => {
     try {
         const { full_name, email, password, mobile, gender, birthdate } = req.body;
@@ -18,7 +27,16 @@ export const userRegister = async (req: Request, res: Response) => {
             })
         }
 
-        const createUser = await user.create(req.body)
+        const hashedpassword = await bcrypt.hash(password, 10);
+
+        const createUser = await user.create({
+            full_name,
+            email,
+            password:hashedpassword,
+            mobile,
+            gender,
+            birthdate,
+        })
         return res.status(201).json({
             success: true,
             message: "user created successfully",
@@ -33,23 +51,38 @@ export const userRegister = async (req: Request, res: Response) => {
     }
 }
 
-// export const userLogin = async (req: Request, res: Response) => {
-//     const { email, mobile, password } = req.body;
+// login controller
+export const userLogin = async (req: Request, res: Response) => {
+    const { email, password } = req.body;
 
-//     if (!password) {
-//         return res.json({
-//             success: false,
-//             message: "password is required"
-//         })
-//     }
+    if (!password || !email) {
+        return res.status(400).json({
+            success: false,
+            message: "input required fields"
+        })
+    }
 
-//     const searchUser = await user.findOne({
-//         where: {
-//             password: password,
-//             $or: [
-//                 { email: { $eq: email },
-//       { mobile: { $eq: mobile } }
-//             ]
-//         }
-//     })
-// }
+    const searchUser : searchuserTypes = await user.findOne({
+        where: { email: email }
+    })
+
+    if (!searchUser) {
+        return res.status(404).json({ message: "User not found" });
+    }
+    // console.log("password", password)
+    // console.log(searchUser.password)
+
+    const isMatch = await bcrypt.compare(password, searchUser.password);
+    // console.log("hased password", isMatch)
+
+    if (!isMatch) {
+        return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    const token = jwt.sign(
+        { id: searchUser.user_id, email: searchUser.email, usertype: searchUser.usertype },
+        process.env.JWT_SECRET as string,
+        { expiresIn: "1d" }
+    );
+    res.json({ token });
+}

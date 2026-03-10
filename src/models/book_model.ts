@@ -3,7 +3,7 @@ import { BookAttributes } from "../interface/books_interface";
 import { sequelize } from "../config/db";
 
 
-export const Books = sequelize.define<Model<BookAttributes>>("book", {
+export const Books = sequelize.define<Model<BookAttributes>>("books", {
     id: {
         type: DataTypes.UUID,
         primaryKey: true,
@@ -28,7 +28,7 @@ export const Books = sequelize.define<Model<BookAttributes>>("book", {
     }
 },
     {
-        tableName: "book",
+        tableName: "books",
         timestamps: true,
         paranoid: true,
         deletedAt: "deleted_at",
