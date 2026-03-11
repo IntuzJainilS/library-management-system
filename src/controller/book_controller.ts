@@ -1,15 +1,63 @@
 import { Request, Response } from "express";
 import { Books } from "../models/book_model";
+import { Op } from "sequelize";
 
 // to get all books
 export const getAllBooks = async (req: Request, res: Response) => {
     try {
-        const getBooks = await Books.findAll();
+        const {
+            page = 1,
+            limit = 10,
+            search,
+            sort_by = 'createdAt',
+            order = 'DESC'
+        } = req.query;
+
+        // console.log('search value',search);
+
+        // pagination code
+        const offset = (Number(page) - 1) * Number(limit);
+
+        const whereClause: any = {};
+
+        // search filtering code
+        if (search) {
+            whereClause[Op.or] = [
+                { title: { [Op.like]: `%${search}%` } },
+                { authorname: { [Op.like]: `%${search}%` } },
+            ];
+        }
+
+        const { count, rows } = await Books.findAndCountAll({
+            where: whereClause,
+            distinct: true,
+            limit: Number(limit),
+            offset: offset,
+            order: [[sort_by as string, order as string]],
+        });
+
+        if (count === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No user found",
+            });
+        }
+
         return res.status(200).json({
             success: true,
-            message: "user gets successfully",
-            data: getBooks,
-        })
+            pagination: {
+                totalItems: count,
+                totalPages: Math.ceil(count / Number(limit)),
+                currentPage: Number(page),
+            },
+            data: rows,
+        });
+        // const getBooks = await Books.findAll();
+        // return res.status(200).json({
+        //     success: true,
+        //     message: "user gets successfully",
+        //     data: getBooks,
+        // })
     } catch (error) {
         return res.status(500).json({
             succee: false,
@@ -51,6 +99,8 @@ export const createbook = async (req: Request, res: Response) => {
                 message: "title, authorname, quantity are requires fields",
             })
         }
+
+        // const imagePath = req.file ? req.file.path : null;
 
         const findbook = await Books.findOne({ where: { title: title } });
         if (findbook) {
@@ -107,15 +157,15 @@ export const updateBook = async (req: Request, res: Response) => {
 }
 
 // delete books
-export const deleteBook = async(req:Request, res:Response) => {
+export const deleteBook = async (req: Request, res: Response) => {
     try {
-        const {id} = req.params;
+        const { id } = req.params;
 
         const findbook = await Books.findByPk(id as string)
         if (!findbook) {
             return res.status(400).json({
                 success: false,
-                message:"book not found",
+                message: "book not found",
             })
         }
         await findbook.destroy();
@@ -124,7 +174,7 @@ export const deleteBook = async(req:Request, res:Response) => {
             message: "Book deleted successfully",
         })
     } catch (error) {
-         return res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: "Failed to delete Book",
             error,

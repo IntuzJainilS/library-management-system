@@ -11,11 +11,13 @@ export const getAlluser = async (req: Request, res: Response) => {
         const {
             page = 1,
             limit = 10,
-            issuedbooks,
+            // issuedbooks,
             search,
             sort_by = 'createdAt',
             order = 'DESC'
         } = req.query;
+
+        // console.log('search value',search);
 
         // pagination code
         const offset = (Number(page) - 1) * Number(limit);
