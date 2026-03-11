@@ -206,17 +206,18 @@ export const deleteuser = async (req: Request, res: Response) => {
 // issued books to the user 
 export const checkissuedBook = async (req: Request, res: Response) => {
     try {
-        const { user_id } = req.params;
+        // const { user_id } = req.params;
+        const user_id = req.user.id;
         // console.log("user-id:", user_id);
 
         const { book_id } = req.body;
 
         // check how many books do user have 
-        const userissuedBook = await issuedBooks.count({ where: { user_id: user_id } })
+        const userissuedBook: any = await issuedBooks.count({ where: { user_id: user_id, return_date: null } as any })
         if (userissuedBook >= 3) {
             return res.status(400).json({ message: "Maximum limit of 3 books reached." });
         }
-        await issuedBooks.create({ user_id: user_id, book_id: book_id })
+        await issuedBooks.create({ user_id: user_id, book_id: book_id, issued_date:Date.now() })
         return res.status(201).json({
             success: true,
             message: "book is issued to user",
@@ -296,6 +297,8 @@ export const userDetails = async (req: Request, res: Response) => {
     try {
         const { user_id } = req.params;
 
+        // const user_id = req.user.id
+
         const userHistory = await issuedBooks.findAll({
             where: { user_id: user_id },
             include: [{
@@ -322,5 +325,77 @@ export const userDetails = async (req: Request, res: Response) => {
             message: 'Error retrieving book history',
             error,
         });
+    }
+}
+
+// user can see its record 
+export const userPersonalRecord = async (req: Request, res: Response) => {
+    try {
+         const {
+            page = 1,
+            limit = 10,
+            search,
+            sort_by = 'createdAt',
+            order = 'DESC'
+        } = req.query;
+
+        const userid = req.user.id;
+        const offset = (Number(page) - 1) * Number(limit);
+
+        // Filter by the logged-in user
+        const whereClause: any = { user_id: userid };
+
+        const includeClause: any[] = [
+            {
+                model: Books,
+                attributes: ['title', 'authorname'],
+                where: search ? {
+                    [Op.or]: [
+                        { title: { [Op.like]: `%${search}%` } },
+                        { authorname: { [Op.like]: `%${search}%` } }
+                    ]
+                } : {},
+                required: search ? true : false, 
+            }
+        ];
+
+        const { count, rows } = await issuedBooks.findAndCountAll({
+            where: whereClause,
+            include: includeClause,
+            distinct: true, 
+            limit: Number(limit),
+            offset: offset,
+            order: [[sort_by as string, order as string]],
+        });
+
+        if (count === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No records found",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            pagination: {
+                totalItems: count,
+                totalPages: Math.ceil(count / Number(limit)),
+                currentPage: Number(page),
+            },
+            data: rows,
+        });
+
+        // const userid = req.user.id;
+        // const allUsers = await user.findAll(userid)
+        // return res.status(200).json({
+        //     success: true,
+        //     data: allUsers,
+        // })
+    } catch (error) {
+        return res.status(500).json({
+            succee: false,
+            message: 'failed to fetch users details',
+            error,
+        })
     }
 }

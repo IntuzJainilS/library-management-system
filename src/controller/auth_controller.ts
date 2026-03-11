@@ -62,9 +62,9 @@ export const userLogin = async (req: Request, res: Response) => {
         })
     }
 
-    const searchUser : searchuserTypes = await user.findOne({
+    const searchUser : searchuserTypes  = await user.findOne({
         where: { email: email }
-    })
+    }) as any
 
     if (!searchUser) {
         return res.status(404).json({ message: "User not found" });

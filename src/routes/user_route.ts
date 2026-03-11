@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyToken } from "../middleware/authUser";
-import { checkissuedBook, createNewUser, deleteuser, getAlluser, returnBook, updateUser, userdetail, userDetails } from "../controller/user_controller";
+import { checkissuedBook, createNewUser, deleteuser, getAlluser, returnBook, updateUser, userdetail, userDetails, userPersonalRecord } from "../controller/user_controller";
 import { checkAdmin } from "../middleware/isAdmin";
 import { registerValidator } from "../validators/auth_validators";
 
@@ -13,7 +13,8 @@ router.put("/users/:id", verifyToken, checkAdmin, updateUser)
 router.delete("/users/:id", verifyToken, checkAdmin, deleteuser)
 
 // route to issue new book and check issued books to user 
-router.post("/user/issuedBooks/:user_id", verifyToken, checkissuedBook)
+router.post("/user/issuedbooks", verifyToken, checkissuedBook)
+// if need to add user id from req. paramas then change endpoint to /user/issuedbooks/:user_id
 
 // route to check how many book is issued to a user
 // router.post("/issuedBooks/:id",issuedbooks)
@@ -23,5 +24,8 @@ router.put('/user/issuedBooks/:user_id', verifyToken, returnBook)
 
 // user can see the record of issued and return book 
 router.get('/user-record/:user_id', verifyToken, userDetails)
+
+// user can see record of its issue and  return book
+router.get('/user/record', verifyToken, userPersonalRecord )
 
 export default router;
