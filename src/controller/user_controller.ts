@@ -212,12 +212,37 @@ export const checkissuedBook = async (req: Request, res: Response) => {
 
         const { book_id } = req.body;
 
+        const checkBookQuantity: any = await Books.findOne({where : {id:book_id, deleted_at:null}}as any)
+        // console.log("quantity", checkBookQuantity)
+        if (!checkBookQuantity || checkBookQuantity.quantity < 1) {
+            return res.status(400).json({
+                success:false,
+                message: "Book is currently unavailable",
+            })
+        }
+
+        const alredyHasBook = await issuedBooks.findOne({where:{
+            user_id:user_id,
+            book_id:book_id,
+            return_date:null
+        }} as any)
+
+         if (alredyHasBook) {
+            return res.status(400).json({
+                success: false,
+                message: "You already have an active issue for this book. Return it first.",
+            });
+        }
+
         // check how many books do user have 
         const userissuedBook: any = await issuedBooks.count({ where: { user_id: user_id, return_date: null } as any })
         if (userissuedBook >= 3) {
             return res.status(400).json({ message: "Maximum limit of 3 books reached." });
         }
         await issuedBooks.create({ user_id: user_id, book_id: book_id, issued_date:Date.now() })
+
+        // decrement the quantity
+        // await checkBookQuantity.decrement('quantity', {by:1});
         return res.status(201).json({
             success: true,
             message: "book is issued to user",
@@ -255,7 +280,9 @@ export const checkissuedBook = async (req: Request, res: Response) => {
 // user return a book 
 export const returnBook = async (req: Request, res: Response) => {
     try {
-        const { user_id } = req.params;
+        // const { user_id } = req.params;
+        const user_id = req.user.id;
+        console.log("user_id", user_id);
         const { book_id } = req.body;
 
         const findenteries = await issuedBooks.findOne({
@@ -271,7 +298,7 @@ export const returnBook = async (req: Request, res: Response) => {
                 data: findenteries,
             })
         }
-        const returndate = await issuedBooks.update({ return_date: Date.now()    }, {
+        const returndate = await issuedBooks.update({ return_date: Date.now() }, {
             where:
             {
                 user_id: user_id,
