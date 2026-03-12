@@ -1,9 +1,9 @@
 export interface issuedbooks{
-    id: string;
+    id?: string;
     user_id: string;
     book_id: string;
-    issued_date: Date;
-    return_date: Date;
+    issued_date: number;
+    return_date?: number;
     createdAt?: Date;
     updatedAt?: Date;
     deleted_at?: Date;  

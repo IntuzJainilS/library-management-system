@@ -271,7 +271,7 @@ export const returnBook = async (req: Request, res: Response) => {
                 data: findenteries,
             })
         }
-        const returndate = await issuedBooks.update({ return_date: Date.now() as any }, {
+        const returndate = await issuedBooks.update({ return_date: Date.now()    }, {
             where:
             {
                 user_id: user_id,
