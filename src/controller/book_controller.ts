@@ -100,7 +100,7 @@ export const createbook = async (req: Request, res: Response) => {
             })
         }
 
-        // const imagePath = req.file ? req.file.path : null;
+        const imagePath = req.file ? req.file.path : null;
 
         const findbook = await Books.findOne({ where: { title: title } });
         if (findbook) {
@@ -112,7 +112,7 @@ export const createbook = async (req: Request, res: Response) => {
         const createbook = await Books.create({
             title,
             authorname,
-            image,
+            image:imagePath as string,
             quantity
         });
         return res.status(201).json({

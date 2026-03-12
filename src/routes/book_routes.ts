@@ -9,7 +9,7 @@ const router = Router();
 
 router.get("/books", verifyToken, getAllBooks);
 router.get("/books/:id", verifyToken, getSinglebook)
-router.post("/admin/books", verifyToken, checkAdmin, upload.single('image-file'), createBookValidator, createbook)
+router.post("/admin/books", verifyToken, checkAdmin, upload.single('image'), createBookValidator, createbook)
 router.put("/admin/books/:id", verifyToken, checkAdmin, createBookValidator, updateBook)
 router.delete("/admin/books/:id", verifyToken, checkAdmin, deleteBook)
 
