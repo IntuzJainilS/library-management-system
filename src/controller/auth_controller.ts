@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import { Op } from "sequelize";
 import dotenv from "dotenv";
 import { searchuserTypes } from "../interface/user_interface";
+import { errorHandler } from "../utils/errorHandler";
 
 dotenv.config();
 
@@ -43,11 +44,12 @@ export const userRegister = async (req: Request, res: Response) => {
             data: createUser,
         })
     } catch (error) {
-        return res.status(500).json({
-            succee: false,
-            message: 'failed to create user',
-            error,
-        })
+        // return res.status(501).json({
+        //     succee: false,
+        //     message: 'failed to create user',
+        //     error,
+        // })
+        errorHandler(res,error,501,"failed to create user")
     }
 }
 

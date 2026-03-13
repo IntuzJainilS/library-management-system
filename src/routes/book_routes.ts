@@ -10,7 +10,7 @@ const router = Router();
 router.get("/admin/get-books", verifyToken, getAllBooks);
 router.get("/books/:id", verifyToken, getSinglebook)
 router.post("/admin/create-books", verifyToken, checkAdmin, upload.single('image'), createBookValidator, createbook)
-router.put("/admin/update-books/:id", verifyToken, checkAdmin, createBookValidator, updateBook)
+router.put("/admin/update-books/:id", verifyToken, checkAdmin, updateBook)
 router.delete("/admin/delete-books/:id", verifyToken, checkAdmin, deleteBook)
 
 export default router;

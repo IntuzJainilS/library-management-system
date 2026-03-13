@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { Books } from "../models/book_model";
 import { Op } from "sequelize";
+import { errorHandler } from "../utils/errorHandler";
 
 // to get all books
 export const getAllBooks = async (req: Request, res: Response) => {
@@ -15,6 +16,17 @@ export const getAllBooks = async (req: Request, res: Response) => {
 
         // console.log('search value',search);
 
+        const columnsAllowedForSorting = ['title', 'authorname', 'quantity'];
+        // validate sortby columns
+        const safeSortBy = columnsAllowedForSorting.includes(sort_by as string)
+            ? sort_by
+            : 'createdAt'; // Default if invalid
+        
+        //validate order
+        const safeOrder = ['ASC', 'DESC'].includes((order as string).toUpperCase())
+            ? (order as string).toUpperCase()
+            : 'DESC';
+
         // pagination code
         const offset = (Number(page) - 1) * Number(limit);
 
@@ -25,6 +37,8 @@ export const getAllBooks = async (req: Request, res: Response) => {
             whereClause[Op.or] = [
                 { title: { [Op.like]: `%${search}%` } },
                 { authorname: { [Op.like]: `%${search}%` } },
+                { id: { [Op.like]: `%${search}%` } },
+                { quantity: { [Op.like]: `%${search}%` } },
             ];
         }
 
@@ -33,7 +47,7 @@ export const getAllBooks = async (req: Request, res: Response) => {
             distinct: true,
             limit: Number(limit),
             offset: offset,
-            order: [[sort_by as string, order as string]],
+            order: [[safeSortBy as string, safeOrder as string]],
         });
 
         if (count === 0) {
@@ -59,11 +73,12 @@ export const getAllBooks = async (req: Request, res: Response) => {
         //     data: getBooks,
         // })
     } catch (error) {
-        return res.status(500).json({
-            succee: false,
-            message: 'failed to fetch books',
-            error,
-        })
+        // return res.status(404).json({
+        //     succee: false,
+        //     message: 'failed to fetch books',
+        //     error,
+        // })
+        errorHandler(res,error,404,"failed to fetch books")
     }
 
 }
@@ -80,11 +95,12 @@ export const getSinglebook = async (req: Request, res: Response) => {
             data: getbookdetail,
         })
     } catch (error) {
-        return res.status(500).json({
-            succee: false,
-            message: 'failed to fetch books',
-            error,
-        })
+        // return res.status(404).json({
+        //     succee: false,
+        //     message: 'failed to fetch book',
+        //     error,
+        // })
+        errorHandler(res,error,404,"failed to fetch book")
     }
 }
 
@@ -93,10 +109,10 @@ export const createbook = async (req: Request, res: Response) => {
     try {
         const { title, authorname, description, image, quantity } = req.body;
 
-        if (!title || !authorname || !quantity) {
+        if (!title || !authorname || !description || !quantity) {
             return res.status(400).json({
                 success: false,
-                message: "title, authorname, quantity are requires fields",
+                message: "title, authorname, description and quantity are requires fields",
             })
         }
 
@@ -122,11 +138,12 @@ export const createbook = async (req: Request, res: Response) => {
             data: createbook,
         })
     } catch (error) {
-        return res.status(500).json({
-            succee: false,
-            message: 'failed to create book',
-            error,
-        })
+        // return res.status(500).json({
+        //     succee: false,
+        //     message: 'failed to create book',
+        //     error,
+        // })
+        errorHandler(res,error,500,"failed to create book")
     }
 
 }
@@ -149,11 +166,12 @@ export const updateBook = async (req: Request, res: Response) => {
             data: findBook,
         })
     } catch (error) {
-        return res.status(500).json({
-            succee: false,
-            message: 'failed to update books',
-            error,
-        })
+        // return res.status(500).json({
+        //     succee: false,
+        //     message: 'failed to update books',
+        //     error,
+        // })
+         errorHandler(res,error,500,"failed to update book")
     }
 }
 
@@ -175,10 +193,11 @@ export const deleteBook = async (req: Request, res: Response) => {
             message: "Book deleted successfully",
         })
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: "Failed to delete Book",
-            error,
-        });
+        // return res.status(500).json({
+        //     success: false,
+        //     message: "Failed to delete Book",
+        //     error,
+        // });
+        errorHandler(res,error,500,"failed to delete Book")
     }
 }

@@ -5,6 +5,6 @@ import { loginvalidator, registerValidator } from "../validators/auth_validators
 const router = Router();
 
 router.post("/login", loginvalidator, userLogin);
-router.post("/register", registerValidator, registerValidator, userRegister);
+router.post("/register", registerValidator, userRegister);
 
 export default router;
