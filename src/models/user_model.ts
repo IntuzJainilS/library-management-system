@@ -39,7 +39,7 @@ export const user = sequelize.define<Model<userattributes, UserCreationAttribute
     },
     usertype: {
         type: DataTypes.ENUM('Admin', 'User'),
-        defaultValue: "user"
+        defaultValue: "User"
     },
     status: {
         type: DataTypes.ENUM('Active', 'Inactive')

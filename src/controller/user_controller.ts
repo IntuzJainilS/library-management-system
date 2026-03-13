@@ -109,7 +109,7 @@ export const createNewUser = async (req: Request, res: Response) => {
     try {
         const { full_name, email, password, mobile, gender, birthdate } = req.body;
 
-        if (!full_name || !email || !password || !mobile || !gender || !birthdate) {
+        if (!full_name || !email || !password || !gender || !birthdate) {
             return res.status(400).json({
                 success: false,
                 message: "required fields are empty",
@@ -212,6 +212,7 @@ export const checkissuedBook = async (req: Request, res: Response) => {
 
         const { book_id } = req.body;
 
+        // check quantity of book before issuing new one 
         const checkBookQuantity: any = await Books.findOne({where : {id:book_id, deleted_at:null}}as any)
         // console.log("quantity", checkBookQuantity)
         if (!checkBookQuantity || checkBookQuantity.quantity < 1) {
@@ -242,7 +243,7 @@ export const checkissuedBook = async (req: Request, res: Response) => {
         await issuedBooks.create({ user_id: user_id, book_id: book_id, issued_date:Date.now() })
 
         // decrement the quantity
-        // await checkBookQuantity.decrement('quantity', {by:1});
+        await checkBookQuantity.decrement('quantity', {by:1});
         return res.status(201).json({
             success: true,
             message: "book is issued to user",
@@ -282,9 +283,10 @@ export const returnBook = async (req: Request, res: Response) => {
     try {
         // const { user_id } = req.params;
         const user_id = req.user.id;
-        console.log("user_id", user_id);
+        // console.log("user_id", user_id);
         const { book_id } = req.body;
 
+        const checkBookQuantity: any = await Books.findOne({where : {id:book_id, deleted_at:null}}as any)
         const findenteries = await issuedBooks.findOne({
             where: {
                 user_id: user_id,
@@ -305,6 +307,8 @@ export const returnBook = async (req: Request, res: Response) => {
                 book_id: book_id,
             }
         })
+        // increment the quantity of the book 
+        await checkBookQuantity.increment('quantity',{by:1})
         return res.status(201).json({
             success: true,
             message: "book returned successfully",
@@ -319,7 +323,7 @@ export const returnBook = async (req: Request, res: Response) => {
     }
 }
 
-// user can see the record of issied and returned book
+// admin can see the record of issued and returned book of user
 export const userDetails = async (req: Request, res: Response) => {
     try {
         const { user_id } = req.params;
@@ -355,7 +359,7 @@ export const userDetails = async (req: Request, res: Response) => {
     }
 }
 
-// user can see its record 
+// user can see its own record 
 export const userPersonalRecord = async (req: Request, res: Response) => {
     try {
          const {

@@ -91,7 +91,7 @@ export const getSinglebook = async (req: Request, res: Response) => {
 // create books
 export const createbook = async (req: Request, res: Response) => {
     try {
-        const { title, authorname, image, quantity } = req.body;
+        const { title, authorname, description, image, quantity } = req.body;
 
         if (!title || !authorname || !quantity) {
             return res.status(400).json({
@@ -112,6 +112,7 @@ export const createbook = async (req: Request, res: Response) => {
         const createbook = await Books.create({
             title,
             authorname,
+            description,
             image:imagePath as string,
             quantity
         });
