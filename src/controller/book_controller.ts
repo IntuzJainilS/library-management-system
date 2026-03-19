@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { Books } from "../models/book_model";
 import { Op } from "sequelize";
 import { errorHandler } from "../utils/errorHandler";
+import cloudinary from "../utils/cloudinary"
+import { UploadApiResponse, UploadApiErrorResponse } from "cloudinary";
 
 // to get all books
 export const getAllBooks = async (req: Request, res: Response) => {
@@ -21,7 +23,7 @@ export const getAllBooks = async (req: Request, res: Response) => {
         const safeSortBy = columnsAllowedForSorting.includes(sort_by as string)
             ? sort_by
             : 'createdAt'; // Default if invalid
-        
+
         //validate order
         const safeOrder = ['ASC', 'DESC'].includes((order as string).toUpperCase())
             ? (order as string).toUpperCase()
@@ -78,7 +80,7 @@ export const getAllBooks = async (req: Request, res: Response) => {
         //     message: 'failed to fetch books',
         //     error,
         // })
-        errorHandler(res,error,404,"failed to fetch books")
+        errorHandler(res, error, 404, "failed to fetch books")
     }
 
 }
@@ -100,14 +102,14 @@ export const getSinglebook = async (req: Request, res: Response) => {
         //     message: 'failed to fetch book',
         //     error,
         // })
-        errorHandler(res,error,404,"failed to fetch book")
+        errorHandler(res, error, 404, "failed to fetch book")
     }
 }
 
 // create books
 export const createbook = async (req: Request, res: Response) => {
     try {
-        const { title, authorname, description, image, quantity } = req.body;
+        const { title, authorname, description, quantity } = req.body;
 
         if (!title || !authorname || !description || !quantity) {
             return res.status(400).json({
@@ -116,7 +118,24 @@ export const createbook = async (req: Request, res: Response) => {
             })
         }
 
-        const imagePath = req.file ? req.file.path : null;
+        // const imagePath = req.file ? req.file.path : null;
+        const result = await new Promise<UploadApiResponse>((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+                {
+                    folder: "uploads",
+                    resource_type: "auto"  // this is used to allow any file type (image, pds etc. by default it takes image file )
+                },
+                (error: UploadApiErrorResponse | undefined, result: UploadApiResponse | undefined) => {
+                    if (error) return reject(error);
+                    if (!result) return reject(new Error("Cloudinary upload failed"));
+                    resolve(result);
+                }
+            );
+
+            stream.end(req.file!.buffer);
+        });
+
+        const imageName = Date.now() + result.public_id + "." + result.format;
 
         const findbook = await Books.findOne({ where: { title: title } });
         if (findbook) {
@@ -129,7 +148,7 @@ export const createbook = async (req: Request, res: Response) => {
             title,
             authorname,
             description,
-            image:imagePath as string,
+            image: imageName as string,
             quantity
         });
         return res.status(201).json({
@@ -143,7 +162,7 @@ export const createbook = async (req: Request, res: Response) => {
         //     message: 'failed to create book',
         //     error,
         // })
-        errorHandler(res,error,500,"failed to create book")
+        errorHandler(res, error, 500, "failed to create book")
     }
 
 }
@@ -171,7 +190,7 @@ export const updateBook = async (req: Request, res: Response) => {
         //     message: 'failed to update books',
         //     error,
         // })
-         errorHandler(res,error,500,"failed to update book")
+        errorHandler(res, error, 500, "failed to update book")
     }
 }
 
@@ -198,6 +217,6 @@ export const deleteBook = async (req: Request, res: Response) => {
         //     message: "Failed to delete Book",
         //     error,
         // });
-        errorHandler(res,error,500,"failed to delete Book")
+        errorHandler(res, error, 500, "failed to delete Book")
     }
 }

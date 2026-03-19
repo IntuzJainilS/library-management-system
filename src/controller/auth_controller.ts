@@ -12,6 +12,7 @@ dotenv.config();
 
 // register controller
 export const userRegister = async (req: Request, res: Response) => {
+    // console.log("----------------------", req);
     try {
         const { full_name, email, password, mobile, gender, birthdate } = req.body;
 

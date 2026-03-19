@@ -4,88 +4,24 @@ import { user } from "../models/user_model";
 import { Books } from "../models/book_model";
 import { issuedBooks } from "../models/issuedBooks_model";
 import { Op } from "sequelize";
-import { errorHandler } from "../utils/errorHandler";
+import { errorHandler } from "../utils/errorHandler"
+import { getPaginatedData } from "../utils/getalldetails";
 
 // gettalluser
 export const getAlluser = async (req: Request, res: Response) => {
     try {
-        const {
-            page = 1,
-            limit = 10,
-            // issuedbooks,
-            search,
-            sort_by = 'createdAt',
-            order = 'DESC'
-        } = req.query;
-
-        // console.log('search value',search);
-        // columns for sorting
-        const columnsAllowedForSorting = ['full_name', 'email', 'mobile', 'gender'];
-
-        // validate sortby columns
-        const safeSortBy = columnsAllowedForSorting.includes(sort_by as string)
-            ? sort_by
-            : 'createdAt'; // Default if invalid
-
-        //validate order
-        const safeOrder = ['ASC', 'DESC'].includes((order as string).toUpperCase())
-            ? (order as string).toUpperCase()
-            : 'DESC';
-
-
-        // pagination code
-        const offset = (Number(page) - 1) * Number(limit);
-
-        const whereClause: any = {};
-
-        // search filtering code
-        if (search) {
-            whereClause[Op.or] = [
-                { full_name: { [Op.like]: `%${search}%` } },
-                { email: { [Op.like]: `%${search}%` } },
-                {user_id: { [Op.like]: `%${search}%`}},
-                {mobile: { [Op.like]: `%${search}%`}},
-                {birthdate: { [Op.like]: `%${search}%`}},
-            ];
-        }
-
-        // const includeClause: any[] = [
-        //     {
-        //         model: Books,
-        //         as: "books",
-        //         attributes: ['name'],
-        //         through: { attributes: [] },
-        //         where: issuedbooks ? { name: { [Op.like]: `%${issuedbooks}%` } } : {},
-        //         required: issuedbooks ? true : false,
-        //     }
-        // ];
-
-        const { count, rows } = await user.findAndCountAll({
-            where: whereClause,
-            // include: includeClause,
-            distinct: true,
-            limit: Number(limit),
-            offset: offset,
-            order: [[safeSortBy as string, safeOrder as string]],
+        const result = await getPaginatedData(user, {
+            ...req.query,
+            allowedSortColumns: ['full_name', 'email', 'mobile', 'gender'],
+            searchFields: ['full_name', 'email', 'user_id', 'mobile', 'birthdate'],
+            defaultSort: 'createdAt'
         });
 
-        if (count === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "No user found",
-            });
+        if (result.pagination.totalItems === 0) {
+            return res.status(404).json({ success: false, message: "No users found" });
         }
 
-        return res.status(200).json({
-            success: true,
-            pagination: {
-                totalItems: count,
-                totalPages: Math.ceil(count / Number(limit)),
-                currentPage: Number(page),
-            },
-            data: rows,
-        });
-
+        return res.status(200).json({ success: true, ...result });
 
         // const allUsers = await user.findAll()
         // return res.status(200).json({
@@ -93,13 +29,13 @@ export const getAlluser = async (req: Request, res: Response) => {
         //     data: allUsers,
         // })
     } catch (error) {
-        // return res.status(404).json({
-        //     succee: false,
-        //     message: 'failed to fetch users',
-        //     error,
-        // })
-        errorHandler(res,error,404,"failed to fetch users")
-    }
+    // return res.status(404).json({
+    //     succee: false,
+    //     message: 'failed to fetch users',
+    //     error,
+    // })
+    errorHandler(res, error, 404, "failed to fetch users")
+}
 }
 
 // get users detail 
@@ -119,7 +55,7 @@ export const userdetail = async (req: Request, res: Response) => {
         //     message: 'failed to fetch user',
         //     error,
         // })
-        errorHandler(res,error,404,"failed to fetch user")
+        errorHandler(res, error, 404, "failed to fetch user")
     }
 }
 
@@ -164,7 +100,7 @@ export const createNewUser = async (req: Request, res: Response) => {
         //     message: 'failed to create user',
         //     error,
         // })
-        errorHandler(res,error,500,"failed to create user")
+        errorHandler(res, error, 500, "failed to create user")
     }
 }
 
@@ -192,7 +128,7 @@ export const updateUser = async (req: Request, res: Response) => {
         //     message: 'failed to update user',
         //     error,
         // })
-        errorHandler(res,error,500,"failed to update user")
+        errorHandler(res, error, 500, "failed to update user")
     }
 
 }
@@ -220,7 +156,7 @@ export const deleteuser = async (req: Request, res: Response) => {
         //     message: "Failed to delete user",
         //     error,
         // });
-        errorHandler(res,error,500,"failed to delete users")
+        errorHandler(res, error, 500, "failed to delete users")
     }
 
 }
@@ -278,7 +214,7 @@ export const checkissuedBook = async (req: Request, res: Response) => {
         //     message: "Failed to issue book",
         //     error,
         // })
-        errorHandler(res,error,500,"failed to issue book")
+        errorHandler(res, error, 500, "failed to issue book")
     }
 }
 
@@ -330,7 +266,8 @@ export const returnBook = async (req: Request, res: Response) => {
             {
                 user_id: user_id,
                 book_id: book_id,
-            }
+                return_date:null
+            } as any
         })
         // increment the quantity of the book 
         await checkBookQuantity.increment('quantity', { by: 1 })
@@ -345,7 +282,7 @@ export const returnBook = async (req: Request, res: Response) => {
         //     message: "Failed to return book",
         //     error,
         // })
-        errorHandler(res,error,500,"failed to return book")
+        errorHandler(res, error, 500, "failed to return book")
     }
 }
 
@@ -382,7 +319,7 @@ export const userDetails = async (req: Request, res: Response) => {
         //     message: 'Error retrieving book history',
         //     error,
         // });
-        errorHandler(res,error,500,"Error retrieving book history")
+        errorHandler(res, error, 500, "Error retrieving book history")
     }
 }
 
@@ -455,6 +392,6 @@ export const userPersonalRecord = async (req: Request, res: Response) => {
         //     message: 'failed to fetch users details',
         //     error,
         // })
-         errorHandler(res,error,500,"failed to fetch users details")
+        errorHandler(res, error, 500, "failed to fetch users details")
     }
 }

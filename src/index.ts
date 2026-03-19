@@ -4,12 +4,18 @@ import { connectDB } from "./config/db";
 import authRoutes from "./routes/auth_route"
 import bookRoute from "./routes/book_routes"
 import userRoute from "./routes/user_route"
+import cors from 'cors';
 
 dotenv.config();
 
 const app = express()
 
 app.use(express.json())
+
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true
+}))
 
 app.use("/api", authRoutes)
 app.use("/api", bookRoute)

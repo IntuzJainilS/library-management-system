@@ -2,6 +2,7 @@ import { body, validationResult } from "express-validator";
 import { Request, Response, NextFunction } from "express";
 
 const validateResult = (req: Request, res: Response, next: NextFunction) => {
+  // console.log("-------------------123", req);
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
@@ -30,6 +31,7 @@ export const createBookValidator = [
   body('title', "title should not be empty").notEmpty(),
   body('authorname', "authorname must not be empty").notEmpty(),
   body('quantity', "quantity must not be empty").notEmpty(),
+  body('description', "description must not be empty").notEmpty(),
   body('image-file').custom((value, { req }) => {
     if (!req.file) {
       throw new Error('Please upload an image file');

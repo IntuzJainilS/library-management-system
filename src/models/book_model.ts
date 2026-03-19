@@ -16,6 +16,9 @@ export const Books = sequelize.define<Model<BookAttributes>>("books", {
     authorname: {
         type: DataTypes.STRING,
     },
+    description:{
+        type:DataTypes.STRING,
+    },
     image: {
         type: DataTypes.STRING,
     },
