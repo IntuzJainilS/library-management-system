@@ -29,13 +29,13 @@ export const getAlluser = async (req: Request, res: Response) => {
         //     data: allUsers,
         // })
     } catch (error) {
-    // return res.status(404).json({
-    //     succee: false,
-    //     message: 'failed to fetch users',
-    //     error,
-    // })
-    errorHandler(res, error, 404, "failed to fetch users")
-}
+        // return res.status(404).json({
+        //     succee: false,
+        //     message: 'failed to fetch users',
+        //     error,
+        // })
+        errorHandler(res, error, 404, "failed to fetch users")
+    }
 }
 
 // get users detail 
@@ -218,42 +218,53 @@ export const checkissuedBook = async (req: Request, res: Response) => {
     }
 }
 
-// check how many books issued to particular user
-// export const issuedbooks = async (req: Request, res: Response) => {
-//     try {
-//         const {user_id} = req.params
+// fetch how many books issued to particular user
+export const issuedbooks = async (req: Request, res: Response) => {
+    try {
+        const user_id  = req.user.id
+        // console.log("userId",user_id);
+        // const { book_id } = req.body
 
-//         const userissuedBook = await issuedBooks.count({ where: { user_id: user_id } })
-//         return res.status(200).json({
-//             success:true,
-//             message:"books fetched successfully",
-//             data:userissuedBook,
-//         })
-//     } catch (error) {
-//         return res.status(500).json({
-//             success: false,
-//             message:"faild to fetch books",
-//             error,
-//         })
-//     }
-
-// }
+        const userissuedBook = await issuedBooks.findAll({ where: { user_id: user_id, return_date: null },
+        include:[{
+            model:Books,
+            attributes: ['title', 'authorname', 'description']
+        }]
+        } as any)
+        return res.status(200).json({
+            success: true,
+            message: "books fetched successfully",
+            data: userissuedBook,
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "faild to fetch issued books",
+            error,
+        })
+    }
+}
 
 // user return a book 
 export const returnBook = async (req: Request, res: Response) => {
     try {
         // const { user_id } = req.params;
         const user_id = req.user.id;
-        // console.log("user_id", user_id);
+        console.log("user_id", user_id);
         const { book_id } = req.body;
+        console.log("book_id", book_id);
 
+        // check book quantity for increment after successful return 
         const checkBookQuantity: any = await Books.findOne({ where: { id: book_id, deleted_at: null } } as any)
+        
+        // find enteries
         const findenteries = await issuedBooks.findOne({
             where: {
                 user_id: user_id,
                 book_id: book_id,
             }
         })
+        console.log("findenteries",findenteries)
         if (!findenteries) {
             return res.status(401).json({
                 success: false,
@@ -263,11 +274,11 @@ export const returnBook = async (req: Request, res: Response) => {
         }
         const returndate = await issuedBooks.update({ return_date: Date.now() }, {
             where:
-            {
-                user_id: user_id,
-                book_id: book_id,
-                return_date:null
-            } as any
+                {
+                    user_id: user_id,
+                    book_id: book_id,
+                    return_date: null
+                } as any
         })
         // increment the quantity of the book 
         await checkBookQuantity.increment('quantity', { by: 1 })
@@ -335,6 +346,7 @@ export const userPersonalRecord = async (req: Request, res: Response) => {
         } = req.query;
 
         const userid = req.user.id;
+        // console.log("user-id",userid)
         const offset = (Number(page) - 1) * Number(limit);
 
         // Filter by the logged-in user
@@ -343,7 +355,7 @@ export const userPersonalRecord = async (req: Request, res: Response) => {
         const includeClause: any[] = [
             {
                 model: Books,
-                attributes: ['title', 'authorname'],
+                attributes: ['title', 'authorname','description'],
                 where: search ? {
                     [Op.or]: [
                         { title: { [Op.like]: `%${search}%` } },

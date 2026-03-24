@@ -135,6 +135,7 @@ export const createbook = async (req: Request, res: Response) => {
             stream.end(req.file!.buffer);
         });
 
+        const imageUrl = result.secure_url; 
         const imageName = Date.now() + result.public_id + "." + result.format;
 
         const findbook = await Books.findOne({ where: { title: title } });
@@ -148,7 +149,7 @@ export const createbook = async (req: Request, res: Response) => {
             title,
             authorname,
             description,
-            image: imageName as string,
+            image: imageUrl as string,
             quantity
         });
         return res.status(201).json({
