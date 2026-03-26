@@ -179,6 +179,7 @@ export const updateBook = async (req: Request, res: Response) => {
                 message: "book not found",
             });
         }
+        console.log("data", req.body)
         await findBook.update(req.body);
         return res.status(200).json({
             success: true,

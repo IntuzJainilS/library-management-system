@@ -12,7 +12,7 @@ interface QueryOptions {
 }
 
 export const getPaginatedData = async (
-    model: ModelStatic<any>, 
+    model: ModelStatic<any>,
     options: QueryOptions,
     extraWhere: any = {}
 ) => {
